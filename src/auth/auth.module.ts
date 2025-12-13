@@ -1,20 +1,23 @@
 import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
-import { ConfigService } from '@nestjs/config';
-import { PasswordService } from './password.service';
-import { GqlAuthGuard } from './gql-auth.guard';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+
 import { AuthService } from './auth.service';
-import { AuthResolver } from './auth.resolver';
+import { AuthController } from './auth.controller';
 import { JwtStrategy } from './jwt.strategy';
+import { PasswordService } from './password.service';
 import { SecurityConfig } from '../common/configs/config.interface';
 
 @Module({
   imports: [
+    ConfigModule,
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.registerAsync({
+      inject: [ConfigService],
       useFactory: async (configService: ConfigService) => {
         const securityConfig = configService.get<SecurityConfig>('security');
+
         return {
           secret: configService.get<string>('JWT_ACCESS_SECRET'),
           signOptions: {
@@ -22,16 +25,10 @@ import { SecurityConfig } from '../common/configs/config.interface';
           },
         };
       },
-      inject: [ConfigService],
     }),
   ],
-  providers: [
-    AuthService,
-    AuthResolver,
-    JwtStrategy,
-    GqlAuthGuard,
-    PasswordService,
-  ],
-  exports: [GqlAuthGuard],
+  controllers: [AuthController],
+  providers: [AuthService, JwtStrategy, PasswordService],
+  exports: [AuthService],
 })
 export class AuthModule {}

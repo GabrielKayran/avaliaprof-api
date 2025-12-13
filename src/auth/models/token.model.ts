@@ -1,11 +1,15 @@
-import { Field, ObjectType } from '@nestjs/graphql';
-import { GraphQLJWT } from 'graphql-scalars';
+import { ApiProperty } from '@nestjs/swagger';
 
-@ObjectType()
 export class Token {
-  @Field(() => GraphQLJWT, { description: 'JWT access token' })
+  @ApiProperty({
+    example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
+    description: 'JWT de acesso',
+  })
   accessToken: string;
 
-  @Field(() => GraphQLJWT, { description: 'JWT refresh token' })
+  @ApiProperty({
+    example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
+    description: 'JWT de refresh',
+  })
   refreshToken: string;
 }

@@ -1,20 +1,26 @@
-import { IsEmail, IsNotEmpty, MinLength } from 'class-validator';
-import { InputType, Field } from '@nestjs/graphql';
+import { IsEmail, IsString, MinLength } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
 
-@InputType()
 export class SignupInput {
-  @Field()
+  @ApiProperty({
+    example: 'João Silva',
+    description: 'Nome completo do usuário',
+  })
+  @IsString()
+  name: string;
+
+  @ApiProperty({
+    example: 'aluno@ufu.br',
+    description: 'Email institucional',
+  })
   @IsEmail()
   email: string;
 
-  @Field()
-  @IsNotEmpty()
-  @MinLength(8)
+  @ApiProperty({
+    example: '123456',
+    description: 'Senha (mínimo 6 caracteres)',
+  })
+  @IsString()
+  @MinLength(6)
   password: string;
-
-  @Field({ nullable: true })
-  firstname?: string;
-
-  @Field({ nullable: true })
-  lastname?: string;
 }

@@ -14,15 +14,9 @@ const config: Config = {
     version: '1.5',
     path: 'api',
   },
-  graphql: {
-    playgroundEnabled: true,
-    debug: true,
-    schemaDestination: './src/schema.graphql',
-    sortSchema: true,
-  },
   security: {
-    expiresIn: '2m',
-    refreshIn: '7d',
+    expiresIn: process.env.JWT_ACCESS_EXPIRES_IN || '15m',
+    refreshIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d',
     bcryptSaltOrRound: 10,
   },
 };

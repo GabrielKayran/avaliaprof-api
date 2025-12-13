@@ -2,7 +2,6 @@ export interface Config {
   nest: NestConfig;
   cors: CorsConfig;
   swagger: SwaggerConfig;
-  graphql: GraphqlConfig;
   security: SecurityConfig;
 }
 

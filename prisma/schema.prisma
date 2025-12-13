@@ -8,34 +8,55 @@ generator client {
   // previewFeatures = []
 }
 
-generator dbml {
-  provider = "prisma-dbml-generator"
-}
-
 model User {
-  id        String   @id @default(cuid())
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  email     String   @unique
-  password  String
-  firstname String?
-  lastname  String?
-  posts     Post[]
-  role      Role
+  id          String       @id @default(uuid())
+  name        String
+  email       String       @unique
+  password    String
+  role        Role
+  evaluations Evaluation[]
 }
 
-model Post {
-  id        String   @id @default(cuid())
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  published Boolean
-  title     String
-  content   String?
-  author    User?    @relation(fields: [authorId], references: [id])
-  authorId  String?
+model Discipline {
+  id         String       @id @default(uuid())
+  name       String
+  code       String?
+  teachers   Teacher[]    @relation("TeacherDisciplines")
+  Evaluation Evaluation[]
+}
+
+model Teacher {
+  id          String       @id @default(uuid())
+  name        String
+  title       String?
+  disciplines Discipline[] @relation("TeacherDisciplines")
+  evaluations Evaluation[]
+}
+
+model Evaluation {
+  id           String   @id @default(uuid())
+  comment      String
+  createdAt    DateTime @default(now())
+  disciplineId String
+  teacherId    String
+  userId       String
+
+  discipline Discipline        @relation(fields: [disciplineId], references: [id])
+  teacher    Teacher           @relation(fields: [teacherId], references: [id])
+  user       User              @relation(fields: [userId], references: [id])
+  scores     EvaluationScore[]
+}
+
+model EvaluationScore {
+  id           String @id @default(uuid())
+  criterionId  String
+  note         Int
+  evaluationId String
+
+  evaluation Evaluation @relation(fields: [evaluationId], references: [id])
 }
 
 enum Role {
+  STUDENT
   ADMIN
-  USER
 }

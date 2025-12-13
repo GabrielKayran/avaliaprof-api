@@ -4,30 +4,64 @@
 
 Table User {
   id String [pk]
-  createdAt DateTime [default: `now()`, not null]
-  updatedAt DateTime [not null]
+  name String [not null]
   email String [unique, not null]
   password String [not null]
-  firstname String
-  lastname String
-  posts Post [not null]
   role Role [not null]
+  evaluations Evaluation [not null]
 }
 
-Table Post {
+Table Discipline {
   id String [pk]
+  name String [not null]
+  code String
+  teachers Teacher [not null]
+  Evaluation Evaluation [not null]
+}
+
+Table Teacher {
+  id String [pk]
+  name String [not null]
+  title String
+  disciplines Discipline [not null]
+  evaluations Evaluation [not null]
+}
+
+Table Evaluation {
+  id String [pk]
+  comment String [not null]
   createdAt DateTime [default: `now()`, not null]
-  updatedAt DateTime [not null]
-  published Boolean [not null]
-  title String [not null]
-  content String
-  author User
-  authorId String
+  disciplineId String [not null]
+  teacherId String [not null]
+  userId String [not null]
+  discipline Discipline [not null]
+  teacher Teacher [not null]
+  user User [not null]
+  scores EvaluationScore [not null]
+}
+
+Table EvaluationScore {
+  id String [pk]
+  criterionId String [not null]
+  note Int [not null]
+  evaluationId String [not null]
+  evaluation Evaluation [not null]
+}
+
+Table TeacherDisciplines {
+  teachersId String [ref: > Teacher.id]
+  disciplinesId String [ref: > Discipline.id]
 }
 
 Enum Role {
+  STUDENT
   ADMIN
-  USER
 }
 
-Ref: Post.authorId > User.id
+Ref: Evaluation.disciplineId > Discipline.id
+
+Ref: Evaluation.teacherId > Teacher.id
+
+Ref: Evaluation.userId > User.id
+
+Ref: EvaluationScore.evaluationId > Evaluation.id
