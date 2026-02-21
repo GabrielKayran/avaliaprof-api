@@ -6,6 +6,7 @@ import {
 import { CreateEvaluationDto } from './dto/create-evaluation.dto';
 import { User } from '@prisma/client';
 import { PrismaService } from 'nestjs-prisma';
+import { PaginationDto, PaginationResponse } from '../common/pagination';
 
 @Injectable()
 export class EvaluationsService {
@@ -48,36 +49,70 @@ export class EvaluationsService {
     });
   }
 
-  async findMine(user: User) {
-    return this.prisma.evaluation.findMany({
-      where: {
-        userId: user.id,
-      },
-      include: {
-        teacher: true,
-        discipline: true,
-        scores: true,
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
-    });
+  async findMine(
+    user: User,
+    pagination?: PaginationDto,
+  ): Promise<PaginationResponse<any>> {
+    const page = pagination?.page || 1;
+    const limit = pagination?.limit || 10;
+    const skip = (page - 1) * limit;
+
+    const [data, total] = await Promise.all([
+      this.prisma.evaluation.findMany({
+        where: {
+          userId: user.id,
+        },
+        include: {
+          teacher: true,
+          discipline: true,
+          scores: true,
+        },
+        orderBy: {
+          createdAt: 'desc',
+        },
+        skip,
+        take: limit,
+      }),
+      this.prisma.evaluation.count({
+        where: {
+          userId: user.id,
+        },
+      }),
+    ]);
+
+    return new PaginationResponse(data, total, page, limit);
   }
 
-  async findByTeacher(teacherId: string) {
-    return this.prisma.evaluation.findMany({
-      where: { teacherId },
-      include: {
-        discipline: true,
-        scores: true,
-        user: {
-          select: { id: true, name: true },
+  async findByTeacher(
+    teacherId: string,
+    pagination?: PaginationDto,
+  ): Promise<PaginationResponse<any>> {
+    const page = pagination?.page || 1;
+    const limit = pagination?.limit || 10;
+    const skip = (page - 1) * limit;
+
+    const [data, total] = await Promise.all([
+      this.prisma.evaluation.findMany({
+        where: { teacherId },
+        include: {
+          discipline: true,
+          scores: true,
+          user: {
+            select: { id: true, name: true },
+          },
         },
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
-    });
+        orderBy: {
+          createdAt: 'desc',
+        },
+        skip,
+        take: limit,
+      }),
+      this.prisma.evaluation.count({
+        where: { teacherId },
+      }),
+    ]);
+
+    return new PaginationResponse(data, total, page, limit);
   }
 
   async getTeacherAverage(teacherId: string) {

@@ -14,6 +14,7 @@ type PrismaMock = {
   evaluation: {
     create: jest.Mock;
     findMany: jest.Mock;
+    count: jest.Mock;
   };
   evaluationScore: {
     groupBy: jest.Mock;
@@ -58,6 +59,7 @@ describe('EvaluationsService', () => {
             evaluation: {
               create: jest.fn(),
               findMany: jest.fn(),
+              count: jest.fn(),
             },
             evaluationScore: {
               groupBy: jest.fn(),
@@ -116,28 +118,84 @@ describe('EvaluationsService', () => {
   });
 
   describe('findMine', () => {
-    it('should return evaluations of the user', async () => {
-      prisma.evaluation.findMany.mockResolvedValue([{ id: 'eval-1' } as any]);
+    it('should return paginated evaluations of the user', async () => {
+      const mockEvaluations = [{ id: 'eval-1' }];
+      prisma.evaluation.findMany.mockResolvedValue(mockEvaluations as any);
+      prisma.evaluation.count.mockResolvedValue(1);
 
-      const result = await service.findMine(mockUser);
+      const pagination = { page: 1, limit: 10 };
+      const result = await service.findMine(mockUser, pagination as any);
 
-      expect(result).toHaveLength(1);
+      expect(result.data).toHaveLength(1);
+      expect(result.total).toBe(1);
+      expect(result.page).toBe(1);
+      expect(result.limit).toBe(10);
       expect(prisma.evaluation.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: { userId: mockUser.id },
+          skip: 0,
+          take: 10,
+        }),
+      );
+    });
+
+    it('should use default pagination when not provided', async () => {
+      prisma.evaluation.findMany.mockResolvedValue([{ id: 'eval-1' }] as any);
+      prisma.evaluation.count.mockResolvedValue(1);
+
+      const result = await service.findMine(mockUser, undefined);
+
+      expect(result.page).toBe(1);
+      expect(result.limit).toBe(10);
+      expect(prisma.evaluation.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          skip: 0,
+          take: 10,
         }),
       );
     });
   });
 
   describe('findByTeacher', () => {
-    it('should return evaluations for a teacher', async () => {
-      prisma.evaluation.findMany.mockResolvedValue([{ id: 'eval-1' } as any]);
+    it('should return paginated evaluations for a teacher', async () => {
+      const mockEvaluations = [{ id: 'eval-1' }];
+      prisma.evaluation.findMany.mockResolvedValue(mockEvaluations as any);
+      prisma.evaluation.count.mockResolvedValue(1);
 
-      const result = await service.findByTeacher('teacher-1');
+      const pagination = { page: 1, limit: 10 };
+      const result = await service.findByTeacher(
+        'teacher-1',
+        pagination as any,
+      );
 
-      expect(result).toHaveLength(1);
-      expect(prisma.evaluation.findMany).toHaveBeenCalled();
+      expect(result.data).toHaveLength(1);
+      expect(result.total).toBe(1);
+      expect(result.page).toBe(1);
+      expect(result.limit).toBe(10);
+      expect(prisma.evaluation.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { teacherId: 'teacher-1' },
+          skip: 0,
+          take: 10,
+        }),
+      );
+    });
+
+    it('should use default pagination when not provided', async () => {
+      prisma.evaluation.findMany.mockResolvedValue([{ id: 'eval-1' }] as any);
+      prisma.evaluation.count.mockResolvedValue(5);
+
+      const result = await service.findByTeacher('teacher-1', undefined);
+
+      expect(result.page).toBe(1);
+      expect(result.limit).toBe(10);
+      expect(result.total).toBe(5);
+      expect(prisma.evaluation.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          skip: 0,
+          take: 10,
+        }),
+      );
     });
   });
 

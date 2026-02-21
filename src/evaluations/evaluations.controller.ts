@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  UseGuards,
+  Query,
+} from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiOperation,
@@ -10,6 +18,7 @@ import { CreateEvaluationDto } from './dto/create-evaluation.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { User } from '@prisma/client';
+import { PaginationDto } from '../common/pagination';
 
 @ApiTags('Evaluations')
 @ApiBearerAuth()
@@ -32,16 +41,19 @@ export class EvaluationsController {
   @ApiOperation({
     summary: 'Minhas avaliações',
   })
-  findMine(@CurrentUser() user: User) {
-    return this.service.findMine(user);
+  findMine(@CurrentUser() user: User, @Query() pagination: PaginationDto) {
+    return this.service.findMine(user, pagination);
   }
 
   @Get('teacher/:teacherId')
   @ApiOperation({
     summary: 'Avaliações de um professor',
   })
-  findByTeacher(@Param('teacherId') teacherId: string) {
-    return this.service.findByTeacher(teacherId);
+  findByTeacher(
+    @Param('teacherId') teacherId: string,
+    @Query() pagination: PaginationDto,
+  ) {
+    return this.service.findByTeacher(teacherId, pagination);
   }
 
   @Get('teacher/:teacherId/average')

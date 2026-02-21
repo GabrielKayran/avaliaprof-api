@@ -6,6 +6,8 @@ import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import config from './common/configs/config';
 import { EvaluationsModule } from './evaluations/evaluations.module';
+import { DisciplinesModule } from './disciplines/disciplines.module';
+import { TeachersModule } from './teachers/teachers.module';
 
 @Module({
   imports: [
@@ -25,6 +27,8 @@ import { EvaluationsModule } from './evaluations/evaluations.module';
 
     AuthModule,
     EvaluationsModule,
+    DisciplinesModule,
+    TeachersModule,
   ],
   controllers: [AppController],
   providers: [AppService],

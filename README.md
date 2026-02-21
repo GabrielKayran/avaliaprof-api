@@ -28,17 +28,25 @@ API REST para avaliação anônima de professores, desenvolvida com **NestJS**, 
 - Endpoint `/me` protegido
 - Controle de acesso por role
 
+### 👨‍🏫 Gerenciamento de Professores
+- CRUD completo de professores (Create, Read, Update, Delete)
+- Listar professores com paginação
+- Obter detalhes de um professor
+- Histórico de avaliações por professor
+
+### 📚 Gerenciamento de Disciplinas
+- CRUD completo de disciplinas
+- Listar disciplinas com paginação
+- Código único de disciplina (opcional)
+- Relacionamento com professores
+
 ### 📝 Avaliações
 - Criar avaliação de professor
 - Avaliar por critérios (didática, assiduidade, etc.)
-- Listar minhas avaliações
-- Listar avaliações por professor
+- Listar minhas avaliações com paginação
+- Listar avaliações por professor com paginação
 - Calcular média por critério
-
-### 👨‍🏫 Estrutura Acadêmica
-- Professores
-- Disciplinas
-- Relacionamento entre professores e disciplinas
+- Sistema de comentários anônimos
 
 ---
 
@@ -59,23 +67,68 @@ API REST para avaliação anônima de professores, desenvolvida com **NestJS**, 
 src/
 ├── auth/
 │   ├── auth.controller.ts
+│   ├── auth.module.ts
 │   ├── auth.service.ts
 │   ├── jwt.strategy.ts
-│   └── guards/
+│   ├── password.service.ts
+│   ├── decorators/
+│   │   └── current-user.decorator.ts
+│   ├── dto/
+│   │   ├── jwt.dto.ts
+│   │   ├── login.input.ts
+│   │   └── signup.input.ts
+│   ├── guards/
+│   │   └── jwt-auth.guard.ts
+│   └── models/
+│       └── token.model.ts
+│
+├── disciplines/
+│   ├── disciplines.controller.ts
+│   ├── disciplines.module.ts
+│   ├── disciplines.service.ts
+│   ├── disciplines.service.spec.ts
+│   └── dto/
+│       ├── create-discipline.dto.ts
+│       └── update-discipline.dto.ts
+│
+├── teachers/
+│   ├── teachers.controller.ts
+│   ├── teachers.module.ts
+│   ├── teachers.service.ts
+│   ├── teachers.service.spec.ts
+│   └── dto/
+│       ├── create-teacher.dto.ts
+│       └── update-teacher.dto.ts
 │
 ├── evaluations/
 │   ├── evaluations.controller.ts
+│   ├── evaluations.module.ts
 │   ├── evaluations.service.ts
+│   ├── evaluations.service.spec.ts
 │   └── dto/
-│
-├── prisma/
-│   └── prisma.service.ts
+│       └── create-evaluation.dto.ts
 │
 ├── common/
-│   └── configs/
+│   ├── configs/
+│   │   ├── config.interface.ts
+│   │   └── config.ts
+│   ├── decorators/
+│   ├── models/
+│   └── pagination/
+│       ├── pagination.dto.ts
+│       ├── pagination.response.ts
+│       └── index.ts
 │
+├── app.controller.ts
 ├── app.module.ts
-└── main.ts
+├── app.service.ts
+├── main.ts
+└── metadata.ts
+
+prisma/
+├── schema.prisma
+├── seed.ts
+└── migrations/
 ```
 
 ---
@@ -135,6 +188,18 @@ npx prisma db seed
 npm run start:dev
 ```
 
+### 7️⃣ Rodar testes unitários (Opcional)
+
+```bash
+# Todos os testes
+npm test
+
+# Testes específicos
+npm test -- evaluations.service.spec
+npm test -- disciplines.service.spec
+npm test -- teachers.service.spec
+```
+
 ---
 
 ## 📚 Documentação (Swagger)
@@ -158,7 +223,93 @@ Bearer SEU_TOKEN_AQUI
 
 ---
 
-## 🧪 Exemplo de Avaliação
+## 📡 Endpoints da API
+
+### 🔐 Autenticação
+- `POST /auth/signup` - Cadastro de novo usuário
+- `POST /auth/login` - Login (retorna accessToken e refreshToken)
+- `POST /auth/refresh` - Renovar token de acesso
+- `GET /auth/me` - Dados do usuário autenticado
+
+### 👨‍🏫 Professores (Teachers)
+- `GET /teachers` - Listar professores (paginado)
+- `POST /teachers` - Criar novo professor
+- `GET /teachers/:id` - Obter detalhes de um professor
+- `PUT /teachers/:id` - Atualizar professor
+- `DELETE /teachers/:id` - Deletar professor
+
+### 📚 Disciplinas (Disciplines)
+- `GET /disciplines` - Listar disciplinas (paginado)
+- `POST /disciplines` - Criar nova disciplina
+- `GET /disciplines/:id` - Obter detalhes de uma disciplina
+- `PUT /disciplines/:id` - Atualizar disciplina
+- `DELETE /disciplines/:id` - Deletar disciplina
+
+### 📝 Avaliações (Evaluations)
+- `POST /evaluations` - Criar avaliação
+- `GET /evaluations/my` - Minhas avaliações (paginado)
+- `GET /evaluations/teacher/:teacherId` - Avaliações de um professor (paginado)
+- `GET /evaluations/teacher/:teacherId/average` - Média de avaliação por critério
+
+---
+
+## 🧪 Exemplos de Uso
+
+### 1. Cadastrar um novo professor
+
+**POST** `/teachers`
+
+```json
+{
+  "name": "Dr. João Silva",
+  "title": "Doutor"
+}
+```
+
+### 2. Criar uma disciplina
+
+**POST** `/disciplines`
+
+```json
+{
+  "name": "Cálculo I",
+  "code": "CALC001"
+}
+```
+
+### 3. Listar professores com paginação
+
+**GET** `/teachers?page=1&limit=10`
+
+Resposta:
+```json
+{
+  "data": [
+    {
+      "id": "uuid",
+      "name": "Dr. João Silva",
+      "title": "Doutor",
+      "disciplines": [
+        {
+          "id": "disc-1",
+          "name": "Cálculo I"
+        }
+      ],
+      "evaluations": [
+        {
+          "id": "eval-1"
+        }
+      ]
+    }
+  ],
+  "total": 25,
+  "page": 1,
+  "limit": 10,
+  "totalPages": 3
+}
+```
+
+### 4. Criar uma avaliação
 
 **POST** `/evaluations`
 
@@ -178,7 +329,68 @@ Bearer SEU_TOKEN_AQUI
 
 ## 🛡️ Segurança
 
-- Senhas armazenadas com hash (bcrypt/argon2)
-- JWT com expiração configurável
-- Refresh token separado
-- Endpoints protegidos por Guards
+- ✅ Senhas armazenadas com hash (bcrypt/argon2)
+- ✅ JWT com expiração configurável
+- ✅ Refresh token separado
+- ✅ Endpoints protegidos por Guards
+- ✅ Validação de entrada com class-validator
+- ✅ Tratamento de erros padronizado
+- ✅ CORS configurável
+
+---
+
+## 💡 Boas Práticas Implementadas
+
+- ✅ **Separação de camadas**: Controllers, Services e DTOs
+- ✅ **Paginação**: Todos os endpoints GET retornam dados paginados
+- ✅ **Validação**: DTOs com validação automática
+- ✅ **Tratamento de erro**: Exceções customizadas (NotFoundException, BadRequestException)
+- ✅ **Documentação**: Swagger/OpenAPI automático
+- ✅ **Testes**: Testes unitários para services
+- ✅ **Type Safety**: TypeScript em todo o projeto
+- ✅ **ORM**: Prisma com type safety
+
+---
+
+## 🔄 Padrão de Resposta
+
+### Sucesso (200, 201)
+```json
+{
+  "id": "uuid-123",
+  "name": "exemplo",
+  "title": "Doutor",
+  "createdAt": "2024-01-01T00:00:00Z"
+}
+```
+
+### Paginação
+```json
+{
+  "data": [
+    {
+      "id": "uuid-1",
+      "name": "Item 1"
+    },
+    {
+      "id": "uuid-2",
+      "name": "Item 2"
+    }
+  ],
+  "total": 100,
+  "page": 1,
+  "limit": 10,
+  "totalPages": 10
+}
+```
+
+### Erro (400, 404, 500)
+```json
+{
+  "statusCode": 400,
+  "message": "Disciplina com este código já existe",
+  "error": "Bad Request"
+}
+``` 
+
+---
