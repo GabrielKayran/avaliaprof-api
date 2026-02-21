@@ -35,3 +35,9 @@ lerna-debug.log*
 !.vscode/extensions.json
 
 .env
+.env.local
+
+# Git Hooks - Allow to be committed
+!.git/hooks/pre-push
+!.git/hooks/pre-push.bat
+!.git/hooks/pre-push.ps1
