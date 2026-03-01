@@ -347,4 +347,13 @@ export class EvaluationsService {
       distribution: [distribution],
     };
   }
+
+  getCriteriaTypes() {
+    return [
+      { id: 'didatica', name: 'Didática' },
+      { id: 'assiduidade', name: 'Assiduidade' },
+      { id: 'claridade', name: 'Clareza nas Avaliações' },
+      { id: 'postura', name: 'Postura em Sala' },
+    ];
+  }
 }

@@ -21,6 +21,7 @@ import {
   MetricsResponseDto,
   GradeDistributionResponseDto,
 } from './dto/evaluation-stats.dto';
+import { CriterionTypeDto } from './dto/criteria-types.dto';
 import { EvaluationPaginationResponse } from './dto/evaluation-pagination-response.dto';
 import { EvaluationWithUserPaginationResponse } from './dto/evaluation-with-user-pagination-response.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -134,5 +135,20 @@ export class EvaluationsController {
   })
   getGradeDistribution() {
     return this.service.getGradeDistribution();
+  }
+
+  @Get('criteria-types')
+  @ApiOperation({
+    summary: 'Tipos de critérios de avaliação',
+    description:
+      'Retorna a lista de todos os tipos de critérios disponíveis para avaliação',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Lista de tipos de critérios',
+    type: [CriterionTypeDto],
+  })
+  getCriteriaTypes() {
+    return this.service.getCriteriaTypes();
   }
 }
