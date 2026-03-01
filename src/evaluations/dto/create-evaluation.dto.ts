@@ -1,10 +1,17 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsArray, IsInt, IsString, Max, Min } from 'class-validator';
+import { IsArray, IsEnum, IsInt, IsString, Max, Min } from 'class-validator';
+
+export enum CriterionEnum {
+  DIDATICA = 'didatica',
+  ASSIDUIDADE = 'assiduidade',
+  CLARIDADE = 'claridade',
+  POSTURA = 'postura',
+}
 
 export class CriterionScoreDto {
-  @ApiProperty({ example: 'didatica' })
-  @IsString()
-  criterionId: string;
+  @ApiProperty({ example: 'didatica', enum: CriterionEnum })
+  @IsEnum(CriterionEnum)
+  criterionId: CriterionEnum;
 
   @ApiProperty({ example: 5, minimum: 1, maximum: 5 })
   @IsInt()

@@ -23,20 +23,43 @@ export class DisciplinesService {
       }
     }
 
+    if (dto.teacherIds && dto.teacherIds.length > 0) {
+      const existingTeachers = await this.prisma.teacher.findMany({
+        where: { id: { in: dto.teacherIds } },
+        select: { id: true },
+      });
+
+      if (existingTeachers.length !== dto.teacherIds.length) {
+        throw new BadRequestException(
+          'Um ou mais professores não foram encontrados',
+        );
+      }
+    }
+
     return this.prisma.discipline.create({
       data: {
         name: dto.name,
         code: dto.code,
+        teachers: dto.teacherIds
+          ? {
+              connect: dto.teacherIds.map((id) => ({ id })),
+            }
+          : undefined,
       },
       include: {
-        teachers: true,
+        teachers: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
       },
     });
   }
 
   async findAll(pagination?: PaginationDto): Promise<PaginationResponse<any>> {
-    const page = pagination?.page || 1;
-    const limit = pagination?.limit || 10;
+    const page = Number(pagination?.page || 1);
+    const limit = Number(pagination?.limit || 10);
     const skip = (page - 1) * limit;
 
     const [data, total] = await Promise.all([
@@ -112,12 +135,36 @@ export class DisciplinesService {
       }
     }
 
+    if (dto.teacherIds && dto.teacherIds.length > 0) {
+      const existingTeachers = await this.prisma.teacher.findMany({
+        where: { id: { in: dto.teacherIds } },
+        select: { id: true },
+      });
+
+      console.log(existingTeachers);
+
+      if (existingTeachers.length !== dto.teacherIds.length) {
+        throw new BadRequestException(
+          'Um ou mais professores não foram encontrados',
+        );
+      }
+    }
+
+    const updateData: any = {
+      name: dto.name,
+      code: dto.code,
+    };
+
+    if (dto.teacherIds !== undefined) {
+      updateData.teachers = {
+        set: [],
+        connect: dto.teacherIds.map((id) => ({ id })),
+      };
+    }
+
     return this.prisma.discipline.update({
       where: { id },
-      data: {
-        name: dto.name,
-        code: dto.code,
-      },
+      data: updateData,
       include: {
         teachers: {
           select: {

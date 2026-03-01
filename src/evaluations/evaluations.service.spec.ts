@@ -119,7 +119,16 @@ describe('EvaluationsService', () => {
 
   describe('findMine', () => {
     it('should return paginated evaluations of the user', async () => {
-      const mockEvaluations = [{ id: 'eval-1' }];
+      const mockEvaluations = [
+        {
+          id: 'eval-1',
+          comment: 'Test comment',
+          createdAt: new Date(),
+          teacher: { id: 'teacher-1', name: 'Teacher 1', title: 'Prof' },
+          discipline: { id: 'disc-1', name: 'Discipline 1', code: 'DISC1' },
+          scores: [],
+        },
+      ];
       prisma.evaluation.findMany.mockResolvedValue(mockEvaluations as any);
       prisma.evaluation.count.mockResolvedValue(1);
 
@@ -140,7 +149,16 @@ describe('EvaluationsService', () => {
     });
 
     it('should use default pagination when not provided', async () => {
-      prisma.evaluation.findMany.mockResolvedValue([{ id: 'eval-1' }] as any);
+      prisma.evaluation.findMany.mockResolvedValue([
+        {
+          id: 'eval-1',
+          comment: 'Test comment',
+          createdAt: new Date(),
+          teacher: { id: 'teacher-1', name: 'Teacher 1', title: 'Prof' },
+          discipline: { id: 'disc-1', name: 'Discipline 1', code: 'DISC1' },
+          scores: [],
+        },
+      ] as any);
       prisma.evaluation.count.mockResolvedValue(1);
 
       const result = await service.findMine(mockUser, undefined);
@@ -158,7 +176,16 @@ describe('EvaluationsService', () => {
 
   describe('findByTeacher', () => {
     it('should return paginated evaluations for a teacher', async () => {
-      const mockEvaluations = [{ id: 'eval-1' }];
+      const mockEvaluations = [
+        {
+          id: 'eval-1',
+          comment: 'Test comment',
+          createdAt: new Date(),
+          discipline: { id: 'disc-1', name: 'Discipline 1', code: 'DISC1' },
+          scores: [],
+          user: { id: 'user-1', name: 'User 1' },
+        },
+      ];
       prisma.evaluation.findMany.mockResolvedValue(mockEvaluations as any);
       prisma.evaluation.count.mockResolvedValue(1);
 
@@ -182,7 +209,16 @@ describe('EvaluationsService', () => {
     });
 
     it('should use default pagination when not provided', async () => {
-      prisma.evaluation.findMany.mockResolvedValue([{ id: 'eval-1' }] as any);
+      prisma.evaluation.findMany.mockResolvedValue([
+        {
+          id: 'eval-1',
+          comment: 'Test comment',
+          createdAt: new Date(),
+          discipline: { id: 'disc-1', name: 'Discipline 1', code: 'DISC1' },
+          scores: [],
+          user: { id: 'user-1', name: 'User 1' },
+        },
+      ] as any);
       prisma.evaluation.count.mockResolvedValue(5);
 
       const result = await service.findByTeacher('teacher-1', undefined);

@@ -28,13 +28,15 @@ export class AuthService {
       payload.password,
     );
 
+    const role = this.isAdminEmail(payload.email) ? Role.ADMIN : Role.STUDENT;
+
     try {
       const user = await this.prisma.user.create({
         data: {
           name: payload.name,
           email: payload.email,
           password: hashedPassword,
-          role: Role.STUDENT,
+          role,
         },
       });
 
@@ -83,21 +85,16 @@ export class AuthService {
     return user;
   }
 
-  async getUserFromToken(token: string): Promise<User> {
-    try {
-      const { userId } = this.jwtService.verify(token);
-
-      return this.validateUser(userId);
-    } catch {
-      throw new UnauthorizedException();
-    }
-  }
-
   generateTokens(payload: { userId: string }): Token {
     return {
       accessToken: this.generateAccessToken(payload),
       refreshToken: this.generateRefreshToken(payload),
     };
+  }
+
+  private isAdminEmail(email: string): boolean {
+    const adminEmailPattern = /@admin\./;
+    return adminEmailPattern.test(email);
   }
 
   private generateAccessToken(payload: { userId: string }): string {

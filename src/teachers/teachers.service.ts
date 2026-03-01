@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { CreateTeacherDto } from './dto/create-teacher.dto';
 import { UpdateTeacherDto } from './dto/update-teacher.dto';
 import { PrismaService } from 'nestjs-prisma';
@@ -9,10 +13,28 @@ export class TeachersService {
   constructor(private readonly prisma: PrismaService) {}
 
   async create(dto: CreateTeacherDto) {
+    if (dto.disciplineIds && dto.disciplineIds.length > 0) {
+      const existingDisciplines = await this.prisma.discipline.findMany({
+        where: { id: { in: dto.disciplineIds } },
+        select: { id: true },
+      });
+
+      if (existingDisciplines.length !== dto.disciplineIds.length) {
+        throw new BadRequestException(
+          'Uma ou mais disciplinas não foram encontradas',
+        );
+      }
+    }
+
     return this.prisma.teacher.create({
       data: {
         name: dto.name,
         title: dto.title,
+        disciplines: dto.disciplineIds
+          ? {
+              connect: dto.disciplineIds.map((id) => ({ id })),
+            }
+          : undefined,
       },
       include: {
         disciplines: {
@@ -26,8 +48,8 @@ export class TeachersService {
   }
 
   async findAll(pagination?: PaginationDto): Promise<PaginationResponse<any>> {
-    const page = pagination?.page || 1;
-    const limit = pagination?.limit || 10;
+    const page = Number(pagination?.page || 1);
+    const limit = Number(pagination?.limit || 10);
     const skip = (page - 1) * limit;
 
     const [data, total] = await Promise.all([
@@ -95,12 +117,34 @@ export class TeachersService {
       throw new NotFoundException('Professor não encontrado');
     }
 
+    if (dto.disciplineIds && dto.disciplineIds.length > 0) {
+      const existingDisciplines = await this.prisma.discipline.findMany({
+        where: { id: { in: dto.disciplineIds } },
+        select: { id: true },
+      });
+
+      if (existingDisciplines.length !== dto.disciplineIds.length) {
+        throw new BadRequestException(
+          'Uma ou mais disciplinas não foram encontradas',
+        );
+      }
+    }
+
+    const updateData: any = {
+      name: dto.name,
+      title: dto.title,
+    };
+
+    if (dto.disciplineIds !== undefined) {
+      updateData.disciplines = {
+        set: [],
+        connect: dto.disciplineIds.map((id) => ({ id })),
+      };
+    }
+
     return this.prisma.teacher.update({
       where: { id },
-      data: {
-        name: dto.name,
-        title: dto.title,
-      },
+      data: updateData,
       include: {
         disciplines: {
           select: {

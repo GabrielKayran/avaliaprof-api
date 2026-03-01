@@ -18,6 +18,8 @@ import {
 import { TeachersService } from './teachers.service';
 import { CreateTeacherDto } from './dto/create-teacher.dto';
 import { UpdateTeacherDto } from './dto/update-teacher.dto';
+import { TeacherWithDisciplinesResponseDto } from './dto/teacher-with-disciplines-response.dto';
+import { TeacherPaginationResponse } from './dto/teacher-pagination-response.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { PaginationDto } from '../common/pagination';
 
@@ -33,7 +35,19 @@ export class TeachersController {
     summary: 'Criar professor',
     description: 'Cria um novo professor no sistema',
   })
-  @ApiResponse({ status: 201 })
+  @ApiResponse({
+    status: 201,
+    description: 'Professor criado com sucesso',
+    type: TeacherWithDisciplinesResponseDto,
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Dados inválidos ou disciplinas não encontradas',
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Não autorizado',
+  })
   create(@Body() dto: CreateTeacherDto) {
     return this.service.create(dto);
   }
@@ -41,8 +55,13 @@ export class TeachersController {
   @Get()
   @ApiOperation({
     summary: 'Listar todos os professores',
+    description: 'Retorna uma lista paginada de todos os professores',
   })
-  @ApiResponse({ status: 200 })
+  @ApiResponse({
+    status: 200,
+    description: 'Lista de professores retornada com sucesso',
+    type: TeacherPaginationResponse,
+  })
   findAll(@Query() pagination: PaginationDto) {
     return this.service.findAll(pagination);
   }
@@ -50,8 +69,17 @@ export class TeachersController {
   @Get(':id')
   @ApiOperation({
     summary: 'Obter professor por ID',
+    description: 'Retorna os detalhes de um professor específico',
   })
-  @ApiResponse({ status: 200 })
+  @ApiResponse({
+    status: 200,
+    description: 'Professor encontrado com sucesso',
+    type: TeacherWithDisciplinesResponseDto,
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Professor não encontrado',
+  })
   findOne(@Param('id') id: string) {
     return this.service.findOne(id);
   }
@@ -59,8 +87,21 @@ export class TeachersController {
   @Put(':id')
   @ApiOperation({
     summary: 'Atualizar professor',
+    description: 'Atualiza os dados de um professor existente',
   })
-  @ApiResponse({ status: 200 })
+  @ApiResponse({
+    status: 200,
+    description: 'Professor atualizado com sucesso',
+    type: TeacherWithDisciplinesResponseDto,
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Professor não encontrado',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Dados inválidos ou disciplinas não encontradas',
+  })
   update(@Param('id') id: string, @Body() dto: UpdateTeacherDto) {
     return this.service.update(id, dto);
   }
@@ -68,8 +109,20 @@ export class TeachersController {
   @Delete(':id')
   @ApiOperation({
     summary: 'Deletar professor',
+    description: 'Remove um professor do sistema',
   })
-  @ApiResponse({ status: 200 })
+  @ApiResponse({
+    status: 200,
+    description: 'Professor deletado com sucesso',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Professor não encontrado',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Professor possui avaliações associadas',
+  })
   remove(@Param('id') id: string) {
     return this.service.remove(id);
   }
