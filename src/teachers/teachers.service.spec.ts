@@ -12,6 +12,13 @@ type PrismaMock = {
     delete: jest.Mock;
     count: jest.Mock;
   };
+  evaluationScore: {
+    deleteMany: jest.Mock;
+  };
+  evaluation: {
+    deleteMany: jest.Mock;
+  };
+  $transaction: jest.Mock;
 };
 
 describe('TeachersService', () => {
@@ -49,6 +56,9 @@ describe('TeachersService', () => {
               delete: jest.fn(),
               count: jest.fn(),
             },
+            evaluationScore: { deleteMany: jest.fn() },
+            evaluation: { deleteMany: jest.fn() },
+            $transaction: jest.fn(),
           },
         },
       ],
@@ -56,6 +66,7 @@ describe('TeachersService', () => {
 
     service = module.get<TeachersService>(TeachersService);
     prisma = module.get(PrismaService);
+    prisma.$transaction.mockImplementation(async (cb) => cb(prisma));
   });
 
   describe('create', () => {
