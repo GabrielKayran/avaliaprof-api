@@ -165,8 +165,22 @@ export class TeachersService {
       throw new NotFoundException('Professor não encontrado');
     }
 
-    return this.prisma.teacher.delete({
-      where: { id },
+    return this.prisma.$transaction(async (tx) => {
+      await tx.evaluationScore.deleteMany({
+        where: {
+          evaluation: {
+            teacherId: id,
+          },
+        },
+      });
+
+      await tx.evaluation.deleteMany({
+        where: { teacherId: id },
+      });
+
+      return tx.teacher.delete({
+        where: { id },
+      });
     });
   }
 }

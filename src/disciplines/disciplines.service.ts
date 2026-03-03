@@ -185,8 +185,21 @@ export class DisciplinesService {
       throw new NotFoundException('Disciplina não encontrada');
     }
 
-    return this.prisma.discipline.delete({
-      where: { id },
+    return this.prisma.$transaction(async (tx) => {
+      await tx.evaluationScore.deleteMany({
+        where: {
+          evaluation: {
+            disciplineId: id,
+          },
+        },
+      });
+
+      await tx.evaluation.deleteMany({
+        where: { disciplineId: id },
+      });
+      return tx.discipline.delete({
+        where: { id },
+      });
     });
   }
 }
