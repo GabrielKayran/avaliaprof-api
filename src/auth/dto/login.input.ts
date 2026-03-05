@@ -6,13 +6,13 @@ export class LoginInput {
     example: 'aluno@ufu.br',
     description: 'Email do usuário',
   })
-  @IsEmail()
+  @IsEmail({}, { message: 'E-mail inválido.' })
   email: string;
 
   @ApiProperty({
     example: '123456',
     description: 'Senha do usuário',
   })
-  @IsString()
+  @IsString({ message: 'A senha deve ser um texto.' })
   password: string;
 }

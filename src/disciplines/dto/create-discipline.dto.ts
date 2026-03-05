@@ -10,12 +10,12 @@ import { Transform } from 'class-transformer';
 
 export class CreateDisciplineDto {
   @ApiProperty({ example: 'Cálculo I' })
-  @IsString()
-  @IsNotEmpty()
+  @IsString({ message: 'O nome deve ser um texto.' })
+  @IsNotEmpty({ message: 'O nome não pode ser vazio.' })
   name: string;
 
   @ApiProperty({ example: 'CALC001', required: false })
-  @IsString()
+  @IsString({ message: 'O código deve ser um texto.' })
   @IsOptional()
   code?: string;
 
@@ -24,8 +24,11 @@ export class CreateDisciplineDto {
     description: 'Array de IDs dos professores que lecionam esta disciplina',
     required: false,
   })
-  @IsArray()
-  @IsUUID('all', { each: true })
+  @IsArray({ message: 'teacherIds deve ser um array.' })
+  @IsUUID('all', {
+    each: true,
+    message: 'Um ou mais IDs de professor são inválidos.',
+  })
   @IsOptional()
   @Transform(({ value }) => (Array.isArray(value) ? value : [value]))
   teacherIds?: string[];

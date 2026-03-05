@@ -46,7 +46,7 @@ export class AuthService {
         e instanceof Prisma.PrismaClientKnownRequestError &&
         e.code === 'P2002'
       ) {
-        throw new ConflictException(`Email ${payload.email} already used.`);
+        throw new ConflictException('Este e-mail já está em uso.');
       }
       throw e;
     }
@@ -93,7 +93,7 @@ export class AuthService {
   }
 
   private isAdminEmail(email: string): boolean {
-    const adminEmailPattern = /@admin\./;
+    const adminEmailPattern = /@admin(\.|$)/i;
     return adminEmailPattern.test(email);
   }
 
