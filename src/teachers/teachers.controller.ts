@@ -20,6 +20,7 @@ import { CreateTeacherDto } from './dto/create-teacher.dto';
 import { UpdateTeacherDto } from './dto/update-teacher.dto';
 import { TeacherWithDisciplinesResponseDto } from './dto/teacher-with-disciplines-response.dto';
 import { TeacherPaginationResponse } from './dto/teacher-pagination-response.dto';
+import { TeacherWithAveragePaginationResponse } from './dto/teacher-with-average-pagination-response.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { PaginationDto } from '../common/pagination';
 
@@ -64,6 +65,22 @@ export class TeachersController {
   })
   findAll(@Query() pagination: PaginationDto) {
     return this.service.findAll(pagination);
+  }
+
+  @Get('with-evaluations')
+  @ApiOperation({
+    summary: 'Listar professores com disciplinas e média de avaliação',
+    description:
+      'Retorna uma lista paginada de professores com as disciplinas que lecionam e a média geral das avaliações recebidas',
+  })
+  @ApiResponse({
+    status: 200,
+    description:
+      'Lista de professores com disciplinas e médias retornada com sucesso',
+    type: TeacherWithAveragePaginationResponse,
+  })
+  findAllWithAverage(@Query() pagination: PaginationDto) {
+    return this.service.findAllWithAverage(pagination);
   }
 
   @Get(':id')

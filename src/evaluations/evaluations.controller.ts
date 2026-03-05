@@ -24,6 +24,7 @@ import {
 import { CriterionTypeDto } from './dto/criteria-types.dto';
 import { EvaluationPaginationResponse } from './dto/evaluation-pagination-response.dto';
 import { EvaluationWithUserPaginationResponse } from './dto/evaluation-with-user-pagination-response.dto';
+import { EvaluationListingPaginationResponse } from './dto/evaluation-listing-pagination-response.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { User } from '@prisma/client';
@@ -44,6 +45,21 @@ export class EvaluationsController {
   @ApiResponse({ status: 201 })
   create(@CurrentUser() user: User, @Body() dto: CreateEvaluationDto) {
     return this.service.create(user, dto);
+  }
+
+  @Get('all')
+  @ApiOperation({
+    summary: 'Listar todas as avaliações',
+    description:
+      'Retorna uma lista paginada de todas as avaliações do sistema com nome do professor, disciplina, notas e média',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Lista de avaliações retornada com sucesso',
+    type: EvaluationListingPaginationResponse,
+  })
+  findAll(@Query() pagination: PaginationDto) {
+    return this.service.findAll(pagination);
   }
 
   @Get('my')

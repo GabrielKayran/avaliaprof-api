@@ -9,6 +9,7 @@ import {
   EvaluationWithUserResponseDto,
   TeacherAverageResponseDto,
 } from './dto/evaluation-response.dto';
+import { EvaluationListingResponseDto } from './dto/evaluation-listing-response.dto';
 import {
   TopTeachersResponseDto,
   MetricsResponseDto,
@@ -32,6 +33,16 @@ type EvaluationWithRelations = Evaluation & {
 };
 
 type EvaluationWithTeacherAndUser = Evaluation & {
+  discipline: Discipline;
+  scores: EvaluationScore[];
+  user: {
+    id: string;
+    name: string;
+  };
+};
+
+type EvaluationWithAllRelations = Evaluation & {
+  teacher: Teacher;
   discipline: Discipline;
   scores: EvaluationScore[];
   user: {
@@ -89,6 +100,80 @@ export class EvaluationsService {
         name: evaluation.user.name,
       },
     };
+  }
+
+  private toEvaluationListingResponseDto(
+    evaluation: EvaluationWithAllRelations,
+  ): EvaluationListingResponseDto {
+    const scores = evaluation.scores.map((score) => ({
+      criterionId: score.criterionId,
+      note: score.note,
+    }));
+
+    const averageScore =
+      scores.length > 0
+        ? Number(
+            (
+              scores.reduce((sum, s) => sum + s.note, 0) / scores.length
+            ).toFixed(2),
+          )
+        : 0;
+
+    return {
+      id: evaluation.id,
+      comment: evaluation.comment,
+      createdAt: evaluation.createdAt.toISOString(),
+      teacher: {
+        id: evaluation.teacher.id,
+        name: evaluation.teacher.name,
+        title: evaluation.teacher.title,
+      },
+      discipline: {
+        id: evaluation.discipline.id,
+        name: evaluation.discipline.name,
+        code: evaluation.discipline.code,
+      },
+      scores,
+      averageScore,
+      user: {
+        id: evaluation.user.id,
+        name: evaluation.user.name,
+      },
+    };
+  }
+
+  async findAll(
+    pagination?: PaginationDto,
+  ): Promise<PaginationResponse<EvaluationListingResponseDto>> {
+    const page = Number(pagination?.page || 1);
+    const limit = Number(pagination?.limit || 10);
+    const skip = (page - 1) * limit;
+
+    const [data, total] = await Promise.all([
+      this.prisma.evaluation.findMany({
+        include: {
+          teacher: true,
+          discipline: true,
+          scores: true,
+          user: {
+            select: { id: true, name: true },
+          },
+        },
+        orderBy: {
+          createdAt: 'desc',
+        },
+        skip,
+        take: limit,
+      }),
+      this.prisma.evaluation.count(),
+    ]);
+
+    return new PaginationResponse(
+      data.map((evaluation) => this.toEvaluationListingResponseDto(evaluation)),
+      total,
+      page,
+      limit,
+    );
   }
 
   async create(user: User, dto: CreateEvaluationDto) {

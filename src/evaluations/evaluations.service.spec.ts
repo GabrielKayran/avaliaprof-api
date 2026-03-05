@@ -117,6 +117,91 @@ describe('EvaluationsService', () => {
     });
   });
 
+  describe('findAll', () => {
+    it('deve retornar lista paginada de todas as avaliações', async () => {
+      const mockEvaluations = [
+        {
+          id: 'eval-1',
+          comment: 'Ótimo professor',
+          createdAt: new Date(),
+          teacherId: 'teacher-1',
+          disciplineId: 'disc-1',
+          userId: 'user-1',
+          teacher: { id: 'teacher-1', name: 'Teacher 1', title: 'Prof' },
+          discipline: { id: 'disc-1', name: 'Discipline 1', code: 'DISC1' },
+          scores: [
+            {
+              id: 's1',
+              criterionId: 'didatica',
+              note: 5,
+              evaluationId: 'eval-1',
+            },
+            {
+              id: 's2',
+              criterionId: 'assiduidade',
+              note: 3,
+              evaluationId: 'eval-1',
+            },
+          ],
+          user: { id: 'user-1', name: 'Aluno 1' },
+        },
+      ];
+      prisma.evaluation.findMany.mockResolvedValue(mockEvaluations as any);
+      prisma.evaluation.count.mockResolvedValue(1);
+
+      const pagination = { page: 1, limit: 10 };
+      const result = await service.findAll(pagination as any);
+
+      expect(result.data).toHaveLength(1);
+      expect(result.total).toBe(1);
+      expect(result.page).toBe(1);
+      expect(result.limit).toBe(10);
+      expect(result.data[0].teacher.name).toBe('Teacher 1');
+      expect(result.data[0].discipline.name).toBe('Discipline 1');
+      expect(result.data[0].user.name).toBe('Aluno 1');
+      expect(result.data[0].averageScore).toBe(4);
+    });
+
+    it('deve usar paginação padrão quando não fornecida', async () => {
+      prisma.evaluation.findMany.mockResolvedValue([] as any);
+      prisma.evaluation.count.mockResolvedValue(0);
+
+      const result = await service.findAll(undefined);
+
+      expect(result.page).toBe(1);
+      expect(result.limit).toBe(10);
+      expect(prisma.evaluation.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          skip: 0,
+          take: 10,
+        }),
+      );
+    });
+
+    it('deve calcular a média corretamente quando não há notas', async () => {
+      const mockEvaluations = [
+        {
+          id: 'eval-1',
+          comment: 'Sem notas',
+          createdAt: new Date(),
+          teacherId: 'teacher-1',
+          disciplineId: 'disc-1',
+          userId: 'user-1',
+          teacher: { id: 'teacher-1', name: 'Teacher 1', title: 'Prof' },
+          discipline: { id: 'disc-1', name: 'Discipline 1', code: 'DISC1' },
+          scores: [],
+          user: { id: 'user-1', name: 'Aluno 1' },
+        },
+      ];
+      prisma.evaluation.findMany.mockResolvedValue(mockEvaluations as any);
+      prisma.evaluation.count.mockResolvedValue(1);
+
+      const result = await service.findAll({ page: 1, limit: 10 } as any);
+
+      expect(result.data[0].averageScore).toBe(0);
+    });
+  });
+
   describe('findMine', () => {
     it('should return paginated evaluations of the user', async () => {
       const mockEvaluations = [

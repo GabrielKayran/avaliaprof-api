@@ -176,6 +176,120 @@ describe('TeachersService', () => {
     });
   });
 
+  describe('findAllWithAverage', () => {
+    it('deve retornar professores com disciplinas e média de avaliação', async () => {
+      const mockTeachers = [
+        {
+          id: 'teacher-1',
+          name: 'Dr. João Silva',
+          title: 'Doutor',
+          disciplines: [{ id: 'disc-1', name: 'Cálculo I', code: 'CALC001' }],
+          evaluations: [
+            {
+              id: 'eval-1',
+              scores: [
+                {
+                  id: 's1',
+                  criterionId: 'didatica',
+                  note: 5,
+                  evaluationId: 'eval-1',
+                },
+                {
+                  id: 's2',
+                  criterionId: 'assiduidade',
+                  note: 3,
+                  evaluationId: 'eval-1',
+                },
+              ],
+            },
+            {
+              id: 'eval-2',
+              scores: [
+                {
+                  id: 's3',
+                  criterionId: 'didatica',
+                  note: 4,
+                  evaluationId: 'eval-2',
+                },
+                {
+                  id: 's4',
+                  criterionId: 'assiduidade',
+                  note: 4,
+                  evaluationId: 'eval-2',
+                },
+              ],
+            },
+          ],
+        },
+      ];
+
+      prisma.teacher.findMany.mockResolvedValue(mockTeachers as any);
+      prisma.teacher.count.mockResolvedValue(1);
+
+      const pagination = { page: 1, limit: 10 };
+      const result = await service.findAllWithAverage(pagination as any);
+
+      expect(result.data).toHaveLength(1);
+      expect(result.total).toBe(1);
+      expect(result.data[0].name).toBe('Dr. João Silva');
+      expect(result.data[0].disciplines).toHaveLength(1);
+      expect(result.data[0].averageScore).toBe(4);
+      expect(result.data[0].totalEvaluations).toBe(2);
+    });
+
+    it('deve usar paginação padrão quando não fornecida', async () => {
+      prisma.teacher.findMany.mockResolvedValue([] as any);
+      prisma.teacher.count.mockResolvedValue(0);
+
+      const result = await service.findAllWithAverage(undefined);
+
+      expect(result.page).toBe(1);
+      expect(result.limit).toBe(10);
+      expect(prisma.teacher.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          skip: 0,
+          take: 10,
+        }),
+      );
+    });
+
+    it('deve retornar média 0 quando professor não tem avaliações', async () => {
+      const mockTeachers = [
+        {
+          id: 'teacher-1',
+          name: 'Dr. João Silva',
+          title: 'Doutor',
+          disciplines: [],
+          evaluations: [],
+        },
+      ];
+
+      prisma.teacher.findMany.mockResolvedValue(mockTeachers as any);
+      prisma.teacher.count.mockResolvedValue(1);
+
+      const result = await service.findAllWithAverage({
+        page: 1,
+        limit: 10,
+      } as any);
+
+      expect(result.data[0].averageScore).toBe(0);
+      expect(result.data[0].totalEvaluations).toBe(0);
+    });
+
+    it('deve ordenar professores por nome', async () => {
+      prisma.teacher.findMany.mockResolvedValue([] as any);
+      prisma.teacher.count.mockResolvedValue(0);
+
+      await service.findAllWithAverage(undefined);
+
+      expect(prisma.teacher.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          orderBy: { name: 'asc' },
+        }),
+      );
+    });
+  });
+
   describe('findOne', () => {
     it('should return a teacher by id', async () => {
       prisma.teacher.findUnique.mockResolvedValue(mockTeacher as any);
