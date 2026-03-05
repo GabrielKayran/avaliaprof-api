@@ -86,55 +86,52 @@ export class TeachersService {
     const limit = Number(pagination?.limit || 10);
     const skip = (page - 1) * limit;
 
-    const [teachers, total] = await Promise.all([
-      this.prisma.teacher.findMany({
-        include: {
-          disciplines: {
-            select: {
-              id: true,
-              name: true,
-              code: true,
-            },
-          },
-          evaluations: {
-            include: {
-              scores: true,
-            },
+    const allTeachers = await this.prisma.teacher.findMany({
+      include: {
+        disciplines: {
+          select: {
+            id: true,
+            name: true,
+            code: true,
           },
         },
-        orderBy: {
-          name: 'asc',
+        evaluations: {
+          include: {
+            scores: true,
+          },
         },
-        skip,
-        take: limit,
-      }),
-      this.prisma.teacher.count(),
-    ]);
-
-    const data = teachers.map((teacher) => {
-      const allScores = teacher.evaluations.flatMap((e) =>
-        e.scores.map((s) => s.note),
-      );
-
-      const averageScore =
-        allScores.length > 0
-          ? Number(
-              (
-                allScores.reduce((sum, note) => sum + note, 0) /
-                allScores.length
-              ).toFixed(2),
-            )
-          : 0;
-
-      return {
-        id: teacher.id,
-        name: teacher.name,
-        title: teacher.title,
-        disciplines: teacher.disciplines,
-        averageScore,
-        totalEvaluations: teacher.evaluations.length,
-      };
+      },
     });
+
+    const total = allTeachers.length;
+
+    const data = allTeachers
+      .map((teacher) => {
+        const allScores = teacher.evaluations.flatMap((e) =>
+          e.scores.map((s) => s.note),
+        );
+
+        const averageScore =
+          allScores.length > 0
+            ? Number(
+                (
+                  allScores.reduce((sum, note) => sum + note, 0) /
+                  allScores.length
+                ).toFixed(2),
+              )
+            : 0;
+
+        return {
+          id: teacher.id,
+          name: teacher.name,
+          title: teacher.title,
+          disciplines: teacher.disciplines,
+          averageScore,
+          totalEvaluations: teacher.evaluations.length,
+        };
+      })
+      .sort((a, b) => b.averageScore - a.averageScore)
+      .slice(skip, skip + limit);
 
     return new PaginationResponse(data, total, page, limit);
   }

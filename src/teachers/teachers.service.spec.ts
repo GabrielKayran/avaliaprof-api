@@ -224,7 +224,6 @@ describe('TeachersService', () => {
       ];
 
       prisma.teacher.findMany.mockResolvedValue(mockTeachers as any);
-      prisma.teacher.count.mockResolvedValue(1);
 
       const pagination = { page: 1, limit: 10 };
       const result = await service.findAllWithAverage(pagination as any);
@@ -239,18 +238,13 @@ describe('TeachersService', () => {
 
     it('deve usar paginação padrão quando não fornecida', async () => {
       prisma.teacher.findMany.mockResolvedValue([] as any);
-      prisma.teacher.count.mockResolvedValue(0);
 
       const result = await service.findAllWithAverage(undefined);
 
       expect(result.page).toBe(1);
       expect(result.limit).toBe(10);
-      expect(prisma.teacher.findMany).toHaveBeenCalledWith(
-        expect.objectContaining({
-          skip: 0,
-          take: 10,
-        }),
-      );
+      expect(result.total).toBe(0);
+      expect(prisma.teacher.findMany).toHaveBeenCalled();
     });
 
     it('deve retornar média 0 quando professor não tem avaliações', async () => {
@@ -265,7 +259,6 @@ describe('TeachersService', () => {
       ];
 
       prisma.teacher.findMany.mockResolvedValue(mockTeachers as any);
-      prisma.teacher.count.mockResolvedValue(1);
 
       const result = await service.findAllWithAverage({
         page: 1,
@@ -276,17 +269,155 @@ describe('TeachersService', () => {
       expect(result.data[0].totalEvaluations).toBe(0);
     });
 
-    it('deve ordenar professores por nome', async () => {
-      prisma.teacher.findMany.mockResolvedValue([] as any);
-      prisma.teacher.count.mockResolvedValue(0);
+    it('deve ordenar professores por média de avaliação (maior para menor)', async () => {
+      const mockTeachers = [
+        {
+          id: 'teacher-1',
+          name: 'Prof. Baixa Média',
+          title: 'Mestre',
+          disciplines: [],
+          evaluations: [
+            {
+              id: 'eval-1',
+              scores: [
+                {
+                  id: 's1',
+                  criterionId: 'didatica',
+                  note: 2,
+                  evaluationId: 'eval-1',
+                },
+              ],
+            },
+          ],
+        },
+        {
+          id: 'teacher-2',
+          name: 'Prof. Alta Média',
+          title: 'Doutor',
+          disciplines: [],
+          evaluations: [
+            {
+              id: 'eval-2',
+              scores: [
+                {
+                  id: 's2',
+                  criterionId: 'didatica',
+                  note: 5,
+                  evaluationId: 'eval-2',
+                },
+              ],
+            },
+          ],
+        },
+        {
+          id: 'teacher-3',
+          name: 'Prof. Média Média',
+          title: 'Doutor',
+          disciplines: [],
+          evaluations: [
+            {
+              id: 'eval-3',
+              scores: [
+                {
+                  id: 's3',
+                  criterionId: 'didatica',
+                  note: 3,
+                  evaluationId: 'eval-3',
+                },
+              ],
+            },
+          ],
+        },
+      ];
 
-      await service.findAllWithAverage(undefined);
+      prisma.teacher.findMany.mockResolvedValue(mockTeachers as any);
 
-      expect(prisma.teacher.findMany).toHaveBeenCalledWith(
-        expect.objectContaining({
-          orderBy: { name: 'asc' },
-        }),
-      );
+      const result = await service.findAllWithAverage({
+        page: 1,
+        limit: 10,
+      } as any);
+
+      expect(result.data[0].name).toBe('Prof. Alta Média');
+      expect(result.data[0].averageScore).toBe(5);
+      expect(result.data[1].name).toBe('Prof. Média Média');
+      expect(result.data[1].averageScore).toBe(3);
+      expect(result.data[2].name).toBe('Prof. Baixa Média');
+      expect(result.data[2].averageScore).toBe(2);
+    });
+
+    it('deve paginar corretamente após ordenação', async () => {
+      const mockTeachers = [
+        {
+          id: 'teacher-1',
+          name: 'A',
+          title: null,
+          disciplines: [],
+          evaluations: [
+            {
+              id: 'e1',
+              scores: [
+                {
+                  id: 's1',
+                  criterionId: 'didatica',
+                  note: 1,
+                  evaluationId: 'e1',
+                },
+              ],
+            },
+          ],
+        },
+        {
+          id: 'teacher-2',
+          name: 'B',
+          title: null,
+          disciplines: [],
+          evaluations: [
+            {
+              id: 'e2',
+              scores: [
+                {
+                  id: 's2',
+                  criterionId: 'didatica',
+                  note: 5,
+                  evaluationId: 'e2',
+                },
+              ],
+            },
+          ],
+        },
+        {
+          id: 'teacher-3',
+          name: 'C',
+          title: null,
+          disciplines: [],
+          evaluations: [
+            {
+              id: 'e3',
+              scores: [
+                {
+                  id: 's3',
+                  criterionId: 'didatica',
+                  note: 3,
+                  evaluationId: 'e3',
+                },
+              ],
+            },
+          ],
+        },
+      ];
+
+      prisma.teacher.findMany.mockResolvedValue(mockTeachers as any);
+
+      const result = await service.findAllWithAverage({
+        page: 1,
+        limit: 2,
+      } as any);
+
+      expect(result.data).toHaveLength(2);
+      expect(result.total).toBe(3);
+      expect(result.totalPages).toBe(2);
+      expect(result.data[0].name).toBe('B');
+      expect(result.data[1].name).toBe('C');
     });
   });
 
