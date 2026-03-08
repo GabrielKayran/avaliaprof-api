@@ -53,7 +53,7 @@ type EvaluationWithAllRelations = Evaluation & {
 
 @Injectable()
 export class EvaluationsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   private toEvaluationResponseDto(
     evaluation: EvaluationWithRelations,
@@ -113,10 +113,10 @@ export class EvaluationsService {
     const averageScore =
       scores.length > 0
         ? Number(
-            (
-              scores.reduce((sum, s) => sum + s.note, 0) / scores.length
-            ).toFixed(2),
-          )
+          (
+            scores.reduce((sum, s) => sum + s.note, 0) / scores.length
+          ).toFixed(2),
+        )
         : 0;
 
     return {
@@ -137,7 +137,7 @@ export class EvaluationsService {
       averageScore,
       user: {
         id: evaluation.user.id,
-        name: evaluation.user.name,
+        name: "Aluno Anônimo",
       },
     };
   }
